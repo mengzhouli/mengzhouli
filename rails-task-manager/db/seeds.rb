@@ -5,3 +5,15 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
+stuff = ["eat", "poo", "drink", "clean", "cook"]
+tails = ["food", "poo", "water", "meats", "vodka"]
+yes = [0, 1]
+
+20.times do
+  task = Task.new(
+    name:   stuff.sample,
+    detail: tails.sample,
+    done:  yes.sample
+  )
+  task.save!
+end

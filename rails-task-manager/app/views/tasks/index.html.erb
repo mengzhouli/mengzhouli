@@ -1,0 +1,14 @@
+<h1>To Do List</h1>
+<hr>
+<%= button_to "Add new task", new_task_path, method: :get %>
+<hr>
+<ul>
+  <% @tasks.each do |task| %>
+  <li><%= task.id %>. <%= task.name%> (<%= task.detail%>)
+      <%= button_to task.name, task_path(task), method: :get %>
+      <%= button_to "Edit", edit_task_path(task), method: :get %>
+      <%= button_to "Delete", task_path(task), method: :delete %>
+  </li>
+  <% end %>
+</ul>
+<hr>
