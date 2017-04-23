@@ -1,57 +1,60 @@
 require 'json'
 require 'open-uri'
 
-h = {}
-i = 1
-while i < 4 do
-	url = "https://backend-challenge-fall-2017.herokuapp.com/orders.json?page=#{i}"
-	h[i] = JSON.load(open(url))
-	#create a new hash k-v pair for each page read
-	i += 1
+avail_no = 0
+orders = []
+
+page = 1
+while true do
+	url = "https://backend-challenge-fall-2017.herokuapp.com/orders.json?page=#{page}"
+	data = JSON.load(open(url))
+	avail_no = data["available_cookies"]
+	# store number of available cookies in variable
+	if data["orders"].empty?
+		# break when there there are no more orders on page
+		break
+	end
+	orders += data["orders"]
+	page += 1
 end
 
-avail_no = h[1]["available_cookies"]
-# store number of currently available cookeis in variable
+orders.select! do |order|
+ 	order["fulfilled"] == false && order["products"].any? {|h| h["title"] == "Cookie"}
+ # select only unfulfilled orders with cookies
+end
 
-
-def sort_filter(h)
-#function returns sorted orders with unfulfilled cookie orders
-	filtered = []
-	h.each do |k, v|
-		arr = v["orders"]
-		arr.select! do |order|
-		 order["fulfilled"] == false && order["products"].any? {|h| h["title"] == "Cookie"}
-		 # select only unfulfilled orders with cookies
-		end
-		filtered += arr
-		# put results into one array
-	end
-	filtered.sort_by! do |order|
-		order["products"][1]["amount"]
+orders.sort! do |o1, o2|
+	if o1["products"][1]["amount"] != o2["products"][1]["amount"]
+		o2["products"][1]["amount"] <=> o1["products"][1]["amount"]
+		# sort by number of cookies DESC
+	else
+		o1["id"] <=> o2["id"]
+		# fall back to id sort ASC
 	end
 end
 
-a2 = sort_filter(h)
 unfulfilled = []
 
-no, yea = a2.partition { |order| order["products"][1]["amount"] > 6}
-unfulfilled << no[0]["id"]
+no, yea = orders.partition { |order| order["products"][1]["amount"] > avail_no}
+# split array into order too large to fill and order small enough to fill
 
-
+no.each {|order| unfulfilled << order["id"] }
+# record the id of the unfillable order
 
 yea.each do |order|
 	if avail_no - order["products"][1]["amount"] >= 0
 		avail_no -= order["products"][1]["amount"]
 		order["fulfilled"] = true
+		# go through orders and return fulfilled for orders that can be fulfilled
 	else
 		unfulfilled<< order["id"]
+		# push order id of unfillable  orders into unfillable
 	end
 end
 
 output = { "remaining_cookies": avail_no,
-	"unfulfilled_orders": unfulfilled.reverse }.to_json
-
+	"unfulfilled_orders": unfulfilled.sort }.to_json
+#return answer as json
 p output
-
 
 
